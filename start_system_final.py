@@ -4,7 +4,6 @@ AI Market Analysis System - Final Complete System (Modular Version)
 Combines PostgreSQL database with full agent system functionality on port 8001.
 """
 
-import asyncio
 import os
 import sys
 from pathlib import Path
@@ -25,13 +24,10 @@ from apscheduler.triggers.cron import CronTrigger
 # Import route modules
 from routes import health, agent_monitor, agent_router, execution_agent
 from routes import rag_event_agent, rl_strategy, meta_evaluation, latent_pattern
-from routes import ensemble_blender, predictions, symbols
+from routes import ensemble_blender, predictions, symbols, portfolio
 from routes import ticker_discovery, forecasting, risk_analysis, ab_testing
 from routes import dependencies
 from routes.utils import run_individual_agents, run_automated_ticker_discovery
-
-# Global variables
-STARTUP_TIME = datetime.now()
 
 # Global schedulers
 ticker_discovery_scheduler = None
@@ -319,6 +315,7 @@ app.include_router(latent_pattern.router, tags=["Latent Pattern"])
 app.include_router(ensemble_blender.router, tags=["Ensemble Blender"])
 app.include_router(predictions.router, tags=["Predictions"])
 app.include_router(symbols.router, tags=["Symbols"])
+app.include_router(portfolio.router, tags=["Portfolio"])
 app.include_router(ticker_discovery.router, tags=["Ticker Discovery"])
 app.include_router(forecasting.router, tags=["Forecasting"])
 app.include_router(risk_analysis.router, tags=["Risk Analysis"])
