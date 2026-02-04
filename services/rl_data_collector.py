@@ -153,8 +153,8 @@ class RLDataCollector:
         while self.is_running:
             try:
                 # Fetch real market data
-                market_data = await self._fetch_market_data()
-                
+                market_data = await self._get_current_market_data()
+
                 # Update market state
                 await self._update_market_state(market_data)
                 
@@ -401,7 +401,7 @@ class RLDataCollector:
                 actions = await conn.fetch("""
                     SELECT expected_return, reward, created_at
                     FROM rl_actions
-                    WHERE created_at >= NOW() - INTERVAL '%s days'
+                    WHERE created_at >= NOW() - INTERVAL '1 day' * $1
                     ORDER BY created_at DESC
                 """, days)
             

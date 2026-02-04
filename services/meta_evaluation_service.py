@@ -204,11 +204,11 @@ class MetaEvaluationService:
             # Get recent predictions for this agent
             async with self.db_pool.acquire() as conn:
                 predictions = await conn.fetch("""
-                    SELECT confidence, predicted_direction, actual_direction, created_at
-                    FROM agent_signals 
-                    WHERE agent_name = $1 
-                    AND created_at >= NOW() - INTERVAL '7 days'
-                    ORDER BY created_at DESC
+                    SELECT confidence, predicted_direction, actual_direction, timestamp
+                    FROM agent_signals
+                    WHERE agent_name = $1
+                    AND timestamp >= NOW() - INTERVAL '7 days'
+                    ORDER BY timestamp DESC
                     LIMIT 100
                 """, agent_name)
             

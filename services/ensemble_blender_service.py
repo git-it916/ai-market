@@ -928,8 +928,8 @@ class EnsembleBlenderService:
                     SELECT agent_name, AVG(accuracy) as avg_accuracy,
                            AVG(sharpe_ratio) as avg_sharpe,
                            AVG(win_rate) as avg_win_rate
-                    FROM agent_performance 
-                    WHERE created_at >= NOW() - INTERVAL '7 days'
+                    FROM agent_performance
+                    WHERE timestamp >= NOW() - INTERVAL '7 days'
                     GROUP BY agent_name
                 """)
                 

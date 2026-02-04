@@ -9,6 +9,10 @@ import sys
 from pathlib import Path
 from loguru import logger
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add the current directory to Python path
 sys.path.append(str(Path(__file__).parent))
@@ -26,6 +30,7 @@ from routes import health, agent_monitor, agent_router, execution_agent
 from routes import rag_event_agent, rl_strategy, meta_evaluation, latent_pattern
 from routes import ensemble_blender, predictions, symbols, portfolio
 from routes import ticker_discovery, forecasting, risk_analysis, ab_testing
+from routes import kr_market
 from routes import dependencies
 from routes.utils import run_individual_agents, run_automated_ticker_discovery
 
@@ -225,7 +230,21 @@ async def lifespan(app: FastAPI):
             logger.info("✅ Automated RAG Service initialized and started (30-minute updates)")
         except Exception as e:
             logger.error(f"❌ Failed to initialize Automated RAG Service: {e}")
-        
+
+        # Initialize Korean Market Data Service
+        try:
+            from services.kr_data_service import KRDataService, KRDataConfig
+            kr_config = KRDataConfig(
+                markets=["KOSPI", "KOSDAQ"],
+                update_interval=60,
+                enable_real_time=True
+            )
+            dependencies.kr_data_service = KRDataService(kr_config)
+            await dependencies.kr_data_service.start()
+            logger.info("✅ Korean Market Data Service initialized (KOSPI + KOSDAQ)")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Korean Market Data Service: {e}")
+
         # Start schedulers
         await start_individual_agent_scheduler()
         await start_ticker_discovery_scheduler()
@@ -241,6 +260,10 @@ async def lifespan(app: FastAPI):
     # Cleanup
     logger.info("🛑 Shutting down system...")
     
+    if dependencies.kr_data_service:
+        dependencies.kr_data_service.stop()
+        logger.info("🛑 Korean data service stopped")
+
     if dependencies.real_data_service:
         dependencies.real_data_service.stop()
         logger.info("🛑 Real data service stopped")
@@ -320,6 +343,7 @@ app.include_router(ticker_discovery.router, tags=["Ticker Discovery"])
 app.include_router(forecasting.router, tags=["Forecasting"])
 app.include_router(risk_analysis.router, tags=["Risk Analysis"])
 app.include_router(ab_testing.router, tags=["A/B Testing"])
+app.include_router(kr_market.router)
 
 logger.info("✅ All route modules registered")
 

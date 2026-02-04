@@ -26,6 +26,7 @@ individual_agent_service: Optional[any] = None
 ensemble_blender_service: Optional[any] = None
 enhanced_forecasting_service: Optional[any] = None
 automated_rag_service: Optional[any] = None
+kr_data_service: Optional[any] = None
 
 
 def init_services(**services):

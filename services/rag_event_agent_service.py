@@ -997,10 +997,10 @@ Keep response under 300 words, focus on actionable insights."""
                         response_time_ms,
                         created_at
                     FROM rag_analysis
-                    WHERE created_at >= NOW() - INTERVAL '%s days'
+                    WHERE created_at >= NOW() - INTERVAL '1 day' * $1
                     ORDER BY created_at DESC
-                    LIMIT $1
-                """ % days, limit)
+                    LIMIT $2
+                """, days, limit)
                 
                 analyses = []
                 for row in rows:
@@ -1029,7 +1029,7 @@ Keep response under 300 words, focus on actionable insights."""
             async with self.db_pool.acquire() as conn:
                 # Get analysis statistics
                 analysis_stats = await conn.fetchrow("""
-                    SELECT 
+                    SELECT
                         COUNT(*) as total_analyses,
                         AVG(confidence) as avg_confidence,
                         AVG(response_time_ms) as avg_response_time,
@@ -1037,45 +1037,45 @@ Keep response under 300 words, focus on actionable insights."""
                         MAX(confidence) as max_confidence,
                         COUNT(DISTINCT DATE(created_at)) as active_days
                     FROM rag_analysis
-                    WHERE created_at >= NOW() - INTERVAL '%s days'
-                """ % days)
+                    WHERE created_at >= NOW() - INTERVAL '1 day' * $1
+                """, days)
                 
                 # Get query patterns
                 query_patterns = await conn.fetch("""
-                    SELECT 
+                    SELECT
                         query,
                         COUNT(*) as frequency,
                         AVG(confidence) as avg_confidence
                     FROM rag_analysis
-                    WHERE created_at >= NOW() - INTERVAL '%s days'
+                    WHERE created_at >= NOW() - INTERVAL '1 day' * $1
                     GROUP BY query
                     ORDER BY frequency DESC
                     LIMIT 10
-                """ % days)
+                """, days)
                 
                 # Get confidence trends
                 confidence_trends = await conn.fetch("""
-                    SELECT 
+                    SELECT
                         DATE(created_at) as analysis_date,
                         AVG(confidence) as avg_confidence,
                         COUNT(*) as analysis_count
                     FROM rag_analysis
-                    WHERE created_at >= NOW() - INTERVAL '%s days'
+                    WHERE created_at >= NOW() - INTERVAL '1 day' * $1
                     GROUP BY DATE(created_at)
                     ORDER BY analysis_date DESC
-                """ % days)
+                """, days)
                 
                 # Get performance metrics
                 performance_metrics = await conn.fetch("""
-                    SELECT 
+                    SELECT
                         metric_name,
                         AVG(metric_value) as avg_value,
                         MAX(metric_value) as max_value,
                         MIN(metric_value) as min_value
                     FROM rag_performance
-                    WHERE measurement_date >= NOW() - INTERVAL '%s days'
+                    WHERE measurement_date >= NOW() - INTERVAL '1 day' * $1
                     GROUP BY metric_name
-                """ % days)
+                """, days)
                 
                 return {
                     "analysis_statistics": {

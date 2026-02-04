@@ -7,17 +7,19 @@ import random
 
 router = APIRouter()
 
+# Track startup time locally
+STARTUP_TIME = datetime.now()
+
 
 def get_system_uptime():
     """Calculate system uptime since startup."""
-    from start_system_final import STARTUP_TIME
     uptime_delta = datetime.now() - STARTUP_TIME
     total_seconds = int(uptime_delta.total_seconds())
-    
+
     hours = total_seconds // 3600
     minutes = (total_seconds % 3600) // 60
     seconds = total_seconds % 60
-    
+
     if hours > 0:
         return f"{hours}h {minutes}m {seconds}s"
     elif minutes > 0:
@@ -114,7 +116,7 @@ async def system_status():
                 SELECT 
                     COUNT(*) as total_predictions,
                     COUNT(CASE WHEN signal_type IN ('buy', 'sell', 'strong_buy') THEN 1 END) as successful_predictions,
-                    AVG(blended_confidence) as avg_accuracy
+                    AVG(confidence) as avg_accuracy
                 FROM ensemble_signals 
                 WHERE created_at >= NOW() - INTERVAL '24 hours'
             """)
@@ -160,7 +162,7 @@ async def system_status():
         # Prepare agent list for frontend
         agent_names = [agent["name"] for agent in agents]
         
-        uptime_seconds = int((datetime.now() - __import__('start_system_final').STARTUP_TIME).total_seconds())
+        uptime_seconds = int((datetime.now() - STARTUP_TIME).total_seconds())
         
         response_data = {
             "status": "online",
@@ -233,7 +235,7 @@ async def get_data_quality():
                 SELECT 
                     COUNT(*) as total_records,
                     COUNT(CASE WHEN created_at >= NOW() - INTERVAL '1 hour' THEN 1 END) as recent_records,
-                    AVG(CASE WHEN blended_confidence IS NOT NULL THEN blended_confidence ELSE 0 END) as avg_confidence
+                    AVG(CASE WHEN confidence IS NOT NULL THEN confidence ELSE 0 END) as avg_confidence
                 FROM ensemble_signals 
                 WHERE created_at >= NOW() - INTERVAL '24 hours'
             """)
